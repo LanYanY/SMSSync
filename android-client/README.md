@@ -4,6 +4,7 @@
 - 监听系统短信（Android 8+）。
 - 自动提取 4~8 位验证码并通过 MQTT 发布。
 - 接收其他 Android 设备发布的验证码并复制到剪贴板。
+- 使用前台服务保持 MQTT 长连接，支持开机自动拉起服务。
 
 ## 兼容性
 - `minSdk 26`（Android 8.0）
@@ -26,9 +27,11 @@ APK 输出：
 2. 点击“启动后台同步”并保持前台通知运行。
 3. 授予短信权限（RECEIVE_SMS/READ_SMS）。
 
-
 ## Release 构建
 - 本地 Android APK：`./gradlew assembleDebug`
 - 仓库已提供 GitHub Actions 发布流水线：`.github/workflows/release.yml`（打 tag `v*` 后自动构建 APK+EXE 并发布 Release）。
 
-- Android 端使用前台服务维持 MQTT 长连接（避免切后台后断开）。
+## 后台保活说明
+- 点击“启动后台同步”后会启动前台服务并显示常驻通知。
+- 点击“停止后台同步”可主动断开。
+- 设备重启后会自动尝试恢复服务。

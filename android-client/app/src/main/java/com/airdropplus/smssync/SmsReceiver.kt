@@ -19,6 +19,13 @@ class SmsReceiver : BroadcastReceiver() {
         val matcher = CODE_PATTERN.matcher(body)
         val code = if (matcher.find()) matcher.group(1) else null
 
-        MqttRuntime.publishSmsIfConnected(code, body)
+        val prefs = context.getSharedPreferences("sms_sync", Context.MODE_PRIVATE)
+        val broker = prefs.getString("broker", "tcp://broker.emqx.io:1883").orEmpty()
+        val appId = prefs.getString("app_id", "demo-room").orEmpty()
+        val username = prefs.getString("username", "").orEmpty().ifBlank { null }
+        val password = prefs.getString("password", "").orEmpty().ifBlank { null }
+
+        MqttSyncService.start(context, broker, appId, username, password)
+        MqttRuntime.publishSmsWithQueue(code, body)
     }
 }

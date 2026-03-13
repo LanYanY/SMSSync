@@ -76,6 +76,9 @@ class MqttSyncService : Service() {
                     sendStatus("启动失败：Broker 或 app-id 不能为空")
                 } else {
                     MqttRuntime.manager(applicationContext).connect(broker, appId, username, password) {
+                        if (it.contains("MQTT连接成功")) {
+                            MqttRuntime.flushPendingIfConnected()
+                        }
                         sendStatus(it)
                     }
                     sendStatus("后台服务已启动，正在连接 MQTT...")
