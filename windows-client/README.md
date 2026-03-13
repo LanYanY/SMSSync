@@ -21,6 +21,9 @@ python sms_sync_client.py --app-id your-room-id --broker broker.emqx.io --port 1
 - `--tls`（启用 TLS 时建议端口 8883）
 
 ## 打包 EXE
+在 Windows 上执行：
 ```bash
-pyinstaller -F sms_sync_client.py -n SmsSyncWindows
+pip install -r requirements.txt pyinstaller==6.11.1
+pyinstaller -F -n SmsSyncWindows sms_sync_client.py
 ```
+输出：`dist/SmsSyncWindows.exe`

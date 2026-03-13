@@ -35,6 +35,14 @@ cd android-client
 
 > 注：当前仓库未提交二进制 APK 文件，需在本地 Android SDK 环境构建。
 
+
+### Release 发布
+- 已新增自动发布流水线：`.github/workflows/release.yml`。
+- 触发方式：推送标签 `v*`（例如 `v1.0.0`）或手动触发 workflow。
+- 产物：
+  - Android：`app-debug.apk`
+  - Windows：`SmsSyncWindows.exe`
+
 ---
 
 ## 原项目说明（AirDrop Plus）
