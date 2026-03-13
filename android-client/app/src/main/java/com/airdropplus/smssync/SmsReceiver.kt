@@ -8,7 +8,6 @@ import java.util.regex.Pattern
 
 class SmsReceiver : BroadcastReceiver() {
     companion object {
-        var mqttManager: MqttManager? = null
         private val CODE_PATTERN = Pattern.compile("(?<!\\d)(\\d{4,8})(?!\\d)")
     }
 
@@ -20,6 +19,6 @@ class SmsReceiver : BroadcastReceiver() {
         val matcher = CODE_PATTERN.matcher(body)
         val code = if (matcher.find()) matcher.group(1) else null
 
-        mqttManager?.takeIf { it.isConnected() }?.publishSms(code, body)
+        MqttRuntime.publishSmsIfConnected(code, body)
     }
 }

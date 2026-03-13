@@ -23,10 +23,12 @@ APK 输出：
 
 ## 首次运行
 1. 打开 App，配置 `MQTT Broker` 与 `app-id`。
-2. 点击“连接并开始同步”。
+2. 点击“启动后台同步”并保持前台通知运行。
 3. 授予短信权限（RECEIVE_SMS/READ_SMS）。
 
 
 ## Release 构建
 - 本地 Android APK：`./gradlew assembleDebug`
 - 仓库已提供 GitHub Actions 发布流水线：`.github/workflows/release.yml`（打 tag `v*` 后自动构建 APK+EXE 并发布 Release）。
+
+- Android 端使用前台服务维持 MQTT 长连接（避免切后台后断开）。

@@ -55,7 +55,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="连接并开始同步" />
+            android:text="启动后台同步" />
+
+        <Button
+            android:id="@+id/stopBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="停止后台同步" />
 
         <TextView
             android:id="@+id/statusText"
