@@ -29,7 +29,7 @@ python sms_sync_client.py --app-id your-room-id --broker broker.emqx.io --port 1
 #### Android
 ```bash
 cd android-client
-gradle assembleDebug
+./gradlew assembleDebug
 ```
 生成 APK：`android-client/app/build/outputs/apk/debug/app-debug.apk`
 

@@ -15,7 +15,7 @@
 
 ```bash
 cd android-client
-gradle assembleDebug
+./gradlew assembleDebug
 ```
 
 APK 输出：
