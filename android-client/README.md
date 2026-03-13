@@ -27,11 +27,12 @@ APK 输出：
 2. 点击“启动后台同步”并保持前台通知运行。
 3. 授予短信权限（RECEIVE_SMS/READ_SMS）。
 
+## 后台常驻与稳定连接
+- 点击“启动后台同步”后会启动前台服务并显示常驻通知。
+- 点击“停止后台同步”可主动断开。
+- 重启设备后通过 `BOOT_COMPLETED` 自动拉起服务并重连。
+- 建议在系统电池优化中将本应用设为“不受限制”，避免被后台清理。
+
 ## Release 构建
 - 本地 Android APK：`./gradlew assembleDebug`
 - 仓库已提供 GitHub Actions 发布流水线：`.github/workflows/release.yml`（打 tag `v*` 后自动构建 APK+EXE 并发布 Release）。
-
-## 后台保活说明
-- 点击“启动后台同步”后会启动前台服务并显示常驻通知。
-- 点击“停止后台同步”可主动断开。
-- 设备重启后会自动尝试恢复服务。

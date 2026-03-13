@@ -38,24 +38,17 @@ class MainActivity : AppCompatActivity() {
         val usernameInput = findViewById<EditText>(R.id.usernameInput)
         val passwordInput = findViewById<EditText>(R.id.passwordInput)
 
-        val prefs = getSharedPreferences("sms_sync", Context.MODE_PRIVATE)
-        brokerInput.setText(prefs.getString("broker", "tcp://broker.emqx.io:1883"))
-        appIdInput.setText(prefs.getString("app_id", "demo-room"))
-        usernameInput.setText(prefs.getString("username", ""))
-        passwordInput.setText(prefs.getString("password", ""))
+        val prefs = getSharedPreferences(MqttSyncService.PREFS_NAME, Context.MODE_PRIVATE)
+        brokerInput.setText(prefs.getString(MqttSyncService.KEY_BROKER, "tcp://broker.emqx.io:1883"))
+        appIdInput.setText(prefs.getString(MqttSyncService.KEY_APP_ID, "demo-room"))
+        usernameInput.setText(prefs.getString(MqttSyncService.KEY_USERNAME, ""))
+        passwordInput.setText(prefs.getString(MqttSyncService.KEY_PASSWORD, ""))
 
         findViewById<Button>(R.id.connectBtn).setOnClickListener {
             val broker = brokerInput.text.toString().trim()
             val appId = appIdInput.text.toString().trim()
             val username = usernameInput.text.toString().trim().ifEmpty { null }
             val password = passwordInput.text.toString().trim().ifEmpty { null }
-
-            prefs.edit()
-                .putString("broker", broker)
-                .putString("app_id", appId)
-                .putString("username", username ?: "")
-                .putString("password", password ?: "")
-                .apply()
 
             MqttSyncService.start(this, broker, appId, username, password)
             statusText.text = "后台服务启动中..."
@@ -75,8 +68,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        super.onStop()
         unregisterReceiver(statusReceiver)
+        super.onStop()
     }
 
     private fun ensurePermissions() {
@@ -84,11 +77,9 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.RECEIVE_SMS,
             Manifest.permission.READ_SMS
         )
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             required.add(Manifest.permission.POST_NOTIFICATIONS)
         }
-
         val need = required.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }

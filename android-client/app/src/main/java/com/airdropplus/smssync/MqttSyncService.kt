@@ -17,6 +17,12 @@ class MqttSyncService : Service() {
         const val ACTION_STATUS = "com.airdropplus.smssync.action.STATUS"
         const val EXTRA_STATUS = "status"
 
+        const val PREFS_NAME = "sms_sync"
+        const val KEY_BROKER = "broker"
+        const val KEY_APP_ID = "app_id"
+        const val KEY_USERNAME = "username"
+        const val KEY_PASSWORD = "password"
+
         private const val EXTRA_BROKER = "broker"
         private const val EXTRA_APP_ID = "app_id"
         private const val EXTRA_USERNAME = "username"
@@ -32,6 +38,14 @@ class MqttSyncService : Service() {
             username: String?,
             password: String?
         ) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit()
+                .putString(KEY_BROKER, broker)
+                .putString(KEY_APP_ID, appId)
+                .putString(KEY_USERNAME, username ?: "")
+                .putString(KEY_PASSWORD, password ?: "")
+                .apply()
+
             val intent = Intent(context, MqttSyncService::class.java).apply {
                 action = ACTION_START
                 putExtra(EXTRA_BROKER, broker)
@@ -44,6 +58,16 @@ class MqttSyncService : Service() {
             } else {
                 context.startService(intent)
             }
+        }
+
+        fun startFromSavedConfig(context: Context) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val broker = prefs.getString(KEY_BROKER, "") ?: ""
+            val appId = prefs.getString(KEY_APP_ID, "") ?: ""
+            if (broker.isBlank() || appId.isBlank()) return
+            val username = prefs.getString(KEY_USERNAME, "")?.ifBlank { null }
+            val password = prefs.getString(KEY_PASSWORD, "")?.ifBlank { null }
+            start(context, broker, appId, username, password)
         }
 
         fun stop(context: Context) {
@@ -66,7 +90,7 @@ class MqttSyncService : Service() {
             }
 
             ACTION_START -> {
-                ensureForeground()
+                ensureForeground("后台保持 MQTT 长连接")
                 val broker = intent.getStringExtra(EXTRA_BROKER).orEmpty()
                 val appId = intent.getStringExtra(EXTRA_APP_ID).orEmpty()
                 val username = intent.getStringExtra(EXTRA_USERNAME)
@@ -80,6 +104,7 @@ class MqttSyncService : Service() {
                             MqttRuntime.flushPendingIfConnected()
                         }
                         sendStatus(it)
+                        ensureForeground(it)
                     }
                     sendStatus("后台服务已启动，正在连接 MQTT...")
                 }
@@ -88,7 +113,7 @@ class MqttSyncService : Service() {
         return START_STICKY
     }
 
-    private fun ensureForeground() {
+    private fun ensureForeground(content: String) {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -103,7 +128,7 @@ class MqttSyncService : Service() {
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("SMS Sync 正在运行")
-            .setContentText("后台保持 MQTT 长连接")
+            .setContentText(content)
             .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setOngoing(true)
             .build()
