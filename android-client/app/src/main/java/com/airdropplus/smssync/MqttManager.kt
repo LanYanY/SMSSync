@@ -3,12 +3,11 @@ package com.airdropplus.smssync
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.os.Build
 import android.provider.Settings
-import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.IMqttToken
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
@@ -17,11 +16,9 @@ import java.time.Instant
 import java.util.UUID
 
 class MqttManager(private val context: Context) {
-    private var mqttClient: MqttAndroidClient? = null
+    private var mqttClient: MqttAsyncClient? = null
     private var appId: String = ""
-    private var broker: String = ""
-    private var username: String? = null
-    private var password: String? = null
+
     private val deviceId: String by lazy {
         Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
             ?: UUID.randomUUID().toString()
@@ -35,38 +32,35 @@ class MqttManager(private val context: Context) {
         onStatus: (String) -> Unit
     ) {
         this.appId = appId
-        this.broker = brokerUrl
-        this.username = username
-        this.password = password
-
         val clientId = "android-$deviceId"
-        mqttClient = MqttAndroidClient(context, brokerUrl, clientId)
 
-        mqttClient?.setCallback(object : MqttCallback {
-            override fun connectionLost(cause: Throwable?) {
-                onStatus("连接断开: ${cause?.message ?: "unknown"}")
-            }
-
-            override fun messageArrived(topic: String?, message: MqttMessage?) {
-                if (message == null) return
-                val payload = message.toString()
-                try {
-                    val obj = JSONObject(payload)
-                    val source = obj.optString("source_device", "unknown")
-                    if (source == deviceId) return
-                    val code = obj.optString("code")
-                    val smsBody = obj.optString("sms_body")
-                    val toCopy = if (code.isNotBlank()) code else smsBody
-                    copyToClipboard(toCopy)
-                    onStatus("收到验证码并复制: $toCopy")
-                } catch (e: Exception) {
-                    onStatus("收到无效消息: ${e.message}")
+        mqttClient = MqttAsyncClient(brokerUrl, clientId, null).apply {
+            setCallback(object : MqttCallback {
+                override fun connectionLost(cause: Throwable?) {
+                    onStatus("连接断开: ${cause?.message ?: "unknown"}")
                 }
-            }
 
-            override fun deliveryComplete(token: IMqttDeliveryToken?) {
-            }
-        })
+                override fun messageArrived(topic: String?, message: MqttMessage?) {
+                    if (message == null) return
+                    val payload = message.toString()
+                    try {
+                        val obj = JSONObject(payload)
+                        val source = obj.optString("source_device", "unknown")
+                        if (source == deviceId) return
+                        val code = obj.optString("code")
+                        val smsBody = obj.optString("sms_body")
+                        val toCopy = if (code.isNotBlank()) code else smsBody
+                        copyToClipboard(toCopy)
+                        onStatus("收到验证码并复制: $toCopy")
+                    } catch (e: Exception) {
+                        onStatus("收到无效消息: ${e.message}")
+                    }
+                }
+
+                override fun deliveryComplete(token: IMqttDeliveryToken?) {
+                }
+            })
+        }
 
         val options = MqttConnectOptions().apply {
             isAutomaticReconnect = true
@@ -105,10 +99,11 @@ class MqttManager(private val context: Context) {
         val obj = JSONObject().apply {
             put("source_device", deviceId)
             put("platform", "android")
-            put("timestamp", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Instant.now().toString() else System.currentTimeMillis().toString())
+            put("timestamp", Instant.now().toString())
             put("sms_body", smsBody)
             put("code", code ?: "")
         }
+
         val message = MqttMessage(obj.toString().toByteArray()).apply {
             qos = 1
         }
@@ -118,7 +113,10 @@ class MqttManager(private val context: Context) {
     fun isConnected(): Boolean = mqttClient?.isConnected == true
 
     fun disconnect() {
-        mqttClient?.disconnect()
+        if (mqttClient?.isConnected == true) {
+            mqttClient?.disconnect()
+        }
+        mqttClient?.close()
     }
 
     private fun topicSms(): String = "sms-sync/$appId/sms"

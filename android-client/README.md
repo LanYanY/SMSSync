@@ -1,12 +1,12 @@
 # Android 短信同步客户端
 
 ## 功能
-- 监听系统短信（Android 5+）。
+- 监听系统短信（Android 8+）。
 - 自动提取 4~8 位验证码并通过 MQTT 发布。
 - 接收其他 Android 设备发布的验证码并复制到剪贴板。
 
 ## 兼容性
-- `minSdk 21`（Android 5.0）
+- `minSdk 26`（Android 8.0）
 - 纯 Java/Kotlin 层实现，无 ABI 限制（可运行于 32 位设备）
 
 ## 构建 APK

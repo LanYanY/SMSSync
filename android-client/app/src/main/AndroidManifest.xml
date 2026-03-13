@@ -14,7 +14,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmsSync">
 
-        <service android:name="org.eclipse.paho.android.service.MqttService" />
 
         <receiver
             android:name=".SmsReceiver"
