@@ -2,3 +2,10 @@
 /build/
 /dist/
 *.spec
+__pycache__/
+*.pyc
+.gradle/
+android-client/.gradle/
+android-client/build/
+android-client/app/build/
+android-client/local.properties
