@@ -2,6 +2,8 @@ package com.airdropplus.smssync
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Button
@@ -12,14 +14,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var mqttManager: MqttManager
     private lateinit var statusText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mqttManager = MqttManager(applicationContext)
         statusText = findViewById(R.id.statusText)
 
         val brokerInput = findViewById<EditText>(R.id.brokerInput)
@@ -45,10 +45,19 @@ class MainActivity : AppCompatActivity() {
                 .putString("password", password ?: "")
                 .apply()
 
-            mqttManager.connect(broker, appId, username, password) {
-                runOnUiThread { statusText.text = it }
+            val serviceIntent = Intent(this, MqttForegroundService::class.java).apply {
+                action = MqttForegroundService.ACTION_START
+                putExtra(MqttForegroundService.EXTRA_BROKER, broker)
+                putExtra(MqttForegroundService.EXTRA_APP_ID, appId)
+                putExtra(MqttForegroundService.EXTRA_USERNAME, username)
+                putExtra(MqttForegroundService.EXTRA_PASSWORD, password)
             }
-            SmsReceiver.mqttManager = mqttManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+            statusText.text = "前台服务已启动，MQTT将在后台保持连接"
         }
 
         ensurePermissions()

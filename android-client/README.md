@@ -30,3 +30,9 @@ APK 输出：
 ## Release 构建
 - 本地 Android APK：`./gradlew assembleDebug`
 - 仓库已提供 GitHub Actions 发布流水线：`.github/workflows/release.yml`（打 tag `v*` 后自动构建 APK+EXE 并发布 Release）。
+
+
+## 后台驻留与长连接
+- 点击“连接并开始同步”后会启动前台服务，保持 MQTT 长连接。
+- 开机后会自动拉起服务并按已保存配置重连。
+- 收到短信时若连接断开，短信广播会尝试自动拉起服务重连。

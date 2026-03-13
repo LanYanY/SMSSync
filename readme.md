@@ -10,7 +10,7 @@
 
 ### 架构
 - 使用公开 MQTT 服务端（默认示例 `broker.emqx.io`）。
-- Android 端：监听短信 -> 提取验证码 -> 发布到 `sms-sync/{app-id}/sms`。
+- Android 端：前台服务保持长连接，监听短信 -> 提取验证码 -> 发布到 `sms-sync/{app-id}/sms`。
 - Windows 端：订阅同一主题 -> 自动复制验证码到剪贴板。
 - Android 端同时订阅主题，可接收其他 Android 上传的验证码并复制到本机剪贴板。
 

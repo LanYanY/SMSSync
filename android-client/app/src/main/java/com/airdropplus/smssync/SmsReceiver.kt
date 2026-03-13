@@ -8,7 +8,6 @@ import java.util.regex.Pattern
 
 class SmsReceiver : BroadcastReceiver() {
     companion object {
-        var mqttManager: MqttManager? = null
         private val CODE_PATTERN = Pattern.compile("(?<!\\d)(\\d{4,8})(?!\\d)")
     }
 
@@ -20,6 +19,24 @@ class SmsReceiver : BroadcastReceiver() {
         val matcher = CODE_PATTERN.matcher(body)
         val code = if (matcher.find()) matcher.group(1) else null
 
-        mqttManager?.takeIf { it.isConnected() }?.publishSms(code, body)
+        val manager = MqttHolder.mqttManager
+        if (manager?.isConnected() == true) {
+            manager.publishSms(code, body)
+            return
+        }
+
+        val prefs = context.getSharedPreferences("sms_sync", Context.MODE_PRIVATE)
+        val broker = prefs.getString("broker", "") ?: ""
+        val appId = prefs.getString("app_id", "") ?: ""
+        if (broker.isNotBlank() && appId.isNotBlank()) {
+            val serviceIntent = Intent(context, MqttForegroundService::class.java).apply {
+                action = MqttForegroundService.ACTION_START
+                putExtra(MqttForegroundService.EXTRA_BROKER, broker)
+                putExtra(MqttForegroundService.EXTRA_APP_ID, appId)
+                putExtra(MqttForegroundService.EXTRA_USERNAME, prefs.getString("username", ""))
+                putExtra(MqttForegroundService.EXTRA_PASSWORD, prefs.getString("password", ""))
+            }
+            context.startForegroundService(serviceIntent)
+        }
     }
 }
